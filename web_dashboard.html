@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Setu — Government Scheme Eligibility Assistant</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{
+    --ink:#1a2e28;
+    --paper:#f6f3ea;
+    --paper-raised:#ffffff;
+    --seal:#b5432a;
+    --stamp-green:#2f5d4f;
+    --stamp-green-dark:#1f4038;
+    --gold:#a67c2e;
+    --line:#d8d0bc;
+    --muted:#6b6555;
+    --ok-bg:#e8f0e9; --ok-fg:#1f4038; --ok-bd:#8fb99e;
+    --warn-bg:#fbf1de; --warn-fg:#8a5a10; --warn-bd:#e0b96a;
+    --no-bg:#f7e9e6; --no-fg:#8c3524; --no-bd:#dba394;
+    --display: "Source Serif 4", "Georgia", serif;
+    --body: "Inter", "Segoe UI", sans-serif;
+    --mono: "IBM Plex Mono", monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(26,46,40,0.05) 1px, transparent 0);
+    background-size: 22px 22px;
+    color:var(--ink);
+    font-family:var(--body);
+    line-height:1.5;
+  }
+  a{color:inherit;}
+
+  /* ---------- top masthead ---------- */
+  .masthead{
+    border-bottom:3px solid var(--ink);
+    background:var(--paper-raised);
+  }
+  .masthead-inner{
+    max-width:1200px;margin:0 auto;padding:22px 32px 16px;
+    display:flex;align-items:flex-end;justify-content:space-between;gap:24px;
+    flex-wrap:wrap;
+  }
+  .brand{display:flex;align-items:center;gap:16px;}
+  .brand-mark{
+    width:52px;height:52px;border-radius:50%;
+    background:conic-gradient(from 210deg, var(--stamp-green), var(--gold), var(--seal), var(--stamp-green));
+    display:flex;align-items:center;justify-content:center;
+    box-shadow: inset 0 0 0 3px var(--paper-raised), inset 0 0 0 5px var(--ink);
+    flex:none;
+  }
+  .brand-mark span{
+    font-family:var(--display); font-weight:700; color:var(--paper-raised); font-size:20px;
+  }
+  .brand-text .eyebrow{
+    font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--stamp-green-dark); margin-bottom:4px;
+  }
+  .brand-text h1{
+    font-family:var(--display); font-size:30px; margin:0; font-weight:700; letter-spacing:-0.01em;
+  }
+  .brand-text p{margin:2px 0 0; color:var(--muted); font-size:14px;}
+  .status-chip{
+    font-family:var(--mono); font-size:11.5px; letter-spacing:.06em;
+    border:1px solid var(--stamp-green); color:var(--stamp-green-dark);
+    background:var(--ok-bg); padding:7px 12px; border-radius:100px;
+    display:flex; align-items:center; gap:8px; white-space:nowrap;
+  }
+  .status-chip .dot{width:7px;height:7px;border-radius:50%;background:var(--stamp-green-dark);}
+
+  .subnav{
+    max-width:1200px;margin:0 auto;padding:0 32px 14px;
+    display:flex; gap:26px; font-family:var(--mono); font-size:12.5px; color:var(--muted);
+    letter-spacing:.03em;
+  }
+  .subnav b{color:var(--ink);}
+
+  /* ---------- layout shell ---------- */
+  .shell{max-width:1200px;margin:0 auto;padding:36px 32px 80px;display:grid;grid-template-columns:1fr;gap:34px;}
+
+  .section-label{
+    font-family:var(--mono); font-size:11.5px; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--seal); margin:0 0 8px;
+  }
+  h2.section-title{
+    font-family:var(--display); font-size:26px; margin:0 0 4px; font-weight:700;
+  }
+  .section-desc{color:var(--muted); font-size:14.5px; max-width:640px; margin:0 0 24px;}
+
+  /* ---------- form card ---------- */
+  .form-card{
+    background:var(--paper-raised);
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:34px 36px;
+    position:relative;
+    box-shadow: 0 1px 0 var(--line), 0 18px 40px -30px rgba(26,46,40,.4);
+  }
+  .form-card::before{
+    content:"";position:absolute; top:18px; right:18px; bottom:18px; left:18px;
+    border:1px solid var(--line); border-radius:2px; pointer-events:none; opacity:.55;
+  }
+  .form-grid{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:22px 26px; margin-bottom:10px;
+  }
+  @media (max-width:820px){ .form-grid{grid-template-columns:1fr 1fr;} }
+  @media (max-width:560px){ .form-grid{grid-template-columns:1fr;} }
+
+  .field label{
+    display:block; font-family:var(--mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--stamp-green-dark); margin-bottom:7px;
+  }
+  .field input[type=number], .field select{
+    width:100%; font-family:var(--body); font-size:15px; color:var(--ink);
+    background:var(--paper); border:1px solid var(--line); border-radius:3px;
+    padding:11px 12px; appearance:none; -webkit-appearance:none;
+  }
+  .field select{
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='9'><path d='M1 1l6 6 6-6' stroke='%231a2e28' stroke-width='1.6' fill='none' stroke-linecap='round'/></svg>");
+    background-repeat:no-repeat; background-position:right 12px center; padding-right:34px;
+  }
+  .field input:focus, .field select:focus{
+    outline:none; border-color:var(--stamp-green); box-shadow:0 0 0 3px rgba(47,93,79,.15);
+  }
+  .field .hint{font-size:11.5px; color:var(--muted); margin-top:5px;}
+
+  .flags-title{
+    font-family:var(--mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--stamp-green-dark); margin:26px 0 12px; display:block;
+  }
+  .flags{display:grid; grid-template-columns:repeat(3,1fr); gap:10px 22px;}
+  @media (max-width:820px){ .flags{grid-template-columns:1fr 1fr;} }
+  @media (max-width:560px){ .flags{grid-template-columns:1fr;} }
+  .flag{
+    display:flex; align-items:center; gap:10px; font-size:14px; color:var(--ink);
+    padding:9px 10px; border:1px solid transparent; border-radius:3px; cursor:pointer;
+    user-select:none;
+  }
+  .flag:hover{background:var(--paper); border-color:var(--line);}
+  .flag input{
+    appearance:none; -webkit-appearance:none; width:18px; height:18px; flex:none;
+    border:1.5px solid var(--muted); border-radius:3px; position:relative; cursor:pointer;
+    background:var(--paper-raised);
+  }
+  .flag input:checked{background:var(--stamp-green); border-color:var(--stamp-green-dark);}
+  .flag input:checked::after{
+    content:""; position:absolute; left:5px; top:1px; width:5px; height:9px;
+    border:solid white; border-width:0 2px 2px 0; transform:rotate(40deg);
+  }
+
+  .form-actions{
+    display:flex; align-items:center; gap:14px; margin-top:28px; flex-wrap:wrap;
+  }
+  .btn{
+    font-family:var(--body); font-weight:600; font-size:14.5px; border:none; cursor:pointer;
+    border-radius:3px; padding:13px 26px; display:inline-flex; align-items:center; gap:9px;
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .btn:active{transform:translateY(1px);}
+  .btn-primary{background:var(--stamp-green-dark); color:#fff; box-shadow:0 10px 24px -12px rgba(31,64,56,.65);}
+  .btn-primary:hover{background:var(--stamp-green);}
+  .btn-ghost{background:transparent; color:var(--muted); border:1px solid var(--line);}
+  .btn-ghost:hover{border-color:var(--ink); color:var(--ink);}
+  .privacy-note{
+    font-size:12.5px; color:var(--muted); margin-left:auto; max-width:320px; text-align:right;
+  }
+  @media (max-width:820px){ .privacy-note{margin-left:0; text-align:left; max-width:none;} }
+
+  /* ---------- results ---------- */
+  #results-section{display:none;}
+  .summary-strip{
+    display:flex; gap:0; border:1px solid var(--line); border-radius:4px; overflow:hidden;
+    margin-bottom:26px; background:var(--paper-raised);
+  }
+  .summary-cell{flex:1; padding:20px 22px; border-right:1px solid var(--line);}
+  .summary-cell:last-child{border-right:none;}
+  .summary-cell .num{font-family:var(--display); font-size:32px; font-weight:700; line-height:1;}
+  .summary-cell .lbl{font-family:var(--mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-top:6px;}
+  .summary-cell.likely .num{color:var(--stamp-green-dark);}
+  .summary-cell.possible .num{color:var(--gold);}
+  .summary-cell.total .num{color:var(--ink);}
+
+  .filter-row{display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;}
+  .filter-chip{
+    font-family:var(--mono); font-size:12px; letter-spacing:.04em; padding:8px 14px;
+    border:1px solid var(--line); border-radius:100px; cursor:pointer; background:var(--paper-raised);
+    color:var(--muted);
+  }
+  .filter-chip.active{background:var(--ink); color:var(--paper-raised); border-color:var(--ink);}
+
+  .result-card{
+    background:var(--paper-raised); border:1px solid var(--line); border-radius:4px;
+    padding:26px 28px; margin-bottom:16px; position:relative;
+  }
+  .result-card.hidden{display:none;}
+  .result-top{display:flex; justify-content:space-between; align-items:flex-start; gap:20px; flex-wrap:wrap;}
+  .result-title{font-family:var(--display); font-size:19px; font-weight:700; margin:0; max-width:640px;}
+  .badge{
+    font-family:var(--mono); font-size:11px; letter-spacing:.05em; padding:6px 12px;
+    border-radius:100px; white-space:nowrap; border:1px solid transparent; font-weight:600;
+  }
+  .badge.likely{background:var(--ok-bg); color:var(--ok-fg); border-color:var(--ok-bd);}
+  .badge.possible{background:var(--warn-bg); color:var(--warn-fg); border-color:var(--warn-bd);}
+  .badge.unlikely{background:var(--no-bg); color:var(--no-fg); border-color:var(--no-bd);}
+
+  .result-category{
+    font-family:var(--mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--stamp-green-dark); margin:10px 0 6px;
+  }
+  .result-desc{font-size:14.5px; color:var(--ink); margin:0 0 14px; max-width:820px;}
+
+  .result-meta{display:grid; grid-template-columns:1fr 1fr; gap:14px 26px; margin-bottom:12px;}
+  @media (max-width:700px){ .result-meta{grid-template-columns:1fr;} }
+  .meta-block .k{font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-bottom:4px;}
+  .meta-block .v{font-size:13.5px; color:var(--ink);}
+
+  .gap-note{
+    margin-top:14px; padding:12px 14px; background:var(--no-bg); border:1px solid var(--no-bd);
+    border-radius:3px; font-size:13px; color:var(--no-fg);
+  }
+  .gap-note b{font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; display:block; margin-bottom:4px;}
+
+  .empty-state{
+    text-align:center; padding:60px 20px; color:var(--muted); font-size:14.5px;
+  }
+
+  footer{
+    max-width:1200px;margin:0 auto;padding:26px 32px 50px; color:var(--muted); font-size:12px;
+    font-family:var(--mono); border-top:1px solid var(--line);
+  }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="masthead-inner">
+    <div class="brand">
+      <div class="brand-mark"><span>से</span></div>
+      <div class="brand-text">
+        <div class="eyebrow">Setu · सेतु — a bridge to your entitlements</div>
+        <h1>Government Scheme Eligibility Assistant</h1>
+        <p>Enter your details once. See every scheme you may qualify for, what to bring, and where to apply.</p>
+      </div>
+    </div>
+    <div class="status-chip"><span class="dot"></span>Runs entirely on this device — nothing is sent anywhere</div>
+  </div>
+  <div class="subnav">
+    <span><b>12</b> schemes indexed</span>
+    <span><b>0</b> data sent to any server</span>
+    <span>Estimate only — not an official determination</span>
+  </div>
+</header>
+
+<div class="shell">
+
+  <section id="form-section">
+    <p class="section-label">Step 1 — Your Details</p>
+    <h2 class="section-title">Tell us about your household</h2>
+    <p class="section-desc">Every field maps directly to a scheme's published eligibility rule. Nothing here is stored outside your device.</p>
+
+    <div class="form-card">
+      <div class="form-grid">
+        <div class="field">
+          <label for="age">Age</label>
+          <input type="number" id="age" min="1" max="120" placeholder="e.g. 34">
+        </div>
+        <div class="field">
+          <label for="gender">Gender</label>
+          <select id="gender">
+            <option value="female">Female</option>
+            <option value="male">Male</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="occupation">Occupation</label>
+          <select id="occupation">
+            <option value="farmer">Farmer</option>
+            <option value="self-employed">Self-employed</option>
+            <option value="business_owner">Business owner</option>
+            <option value="salaried">Salaried</option>
+            <option value="unemployed">Unemployed</option>
+            <option value="street_vendor">Street vendor</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="location">Location</label>
+          <select id="location">
+            <option value="rural">Rural</option>
+            <option value="urban">Urban</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="income">Annual family income (₹)</label>
+          <input type="number" id="income" min="0" placeholder="e.g. 180000">
+          <div class="hint">Combined household income before tax</div>
+        </div>
+        <div class="field">
+          <label for="bank">Bank account</label>
+          <select id="bank">
+            <option value="yes">Have a bank account</option>
+            <option value="no">No bank account</option>
+          </select>
+        </div>
+      </div>
+
+      <span class="flags-title">Additional details</span>
+      <div class="flags">
+        <label class="flag"><input type="checkbox" id="land_owner"> Owns agricultural land</label>
+        <label class="flag"><input type="checkbox" id="bpl_card"> Has BPL / below-poverty-line card</label>
+        <label class="flag"><input type="checkbox" id="owns_pucca_house"> Owns a pucca (concrete) house</label>
+        <label class="flag"><input type="checkbox" id="is_student"> Currently a student</label>
+        <label class="flag"><input type="checkbox" id="is_pregnant"> Pregnant / lactating mother</label>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-primary" onclick="runCheck()">Check my eligibility →</button>
+        <button class="btn btn-ghost" onclick="clearForm()">Clear form</button>
+        <p class="privacy-note">All fields are required for an accurate match. Your details stay in this browser tab and are never uploaded.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="results-section">
+    <p class="section-label">Step 2 — Your Results</p>
+    <h2 class="section-title">Schemes matched to your profile</h2>
+    <p class="section-desc">Ranked by how closely your details match each scheme's published criteria.</p>
+
+    <div class="summary-strip">
+      <div class="summary-cell likely"><div class="num" id="count-likely">0</div><div class="lbl">Likely eligible</div></div>
+      <div class="summary-cell possible"><div class="num" id="count-possible">0</div><div class="lbl">Possibly eligible</div></div>
+      <div class="summary-cell total"><div class="num" id="count-total">0</div><div class="lbl">Schemes checked</div></div>
+    </div>
+
+    <div class="filter-row">
+      <div class="filter-chip active" data-filter="all" onclick="setFilter('all')">All results</div>
+      <div class="filter-chip" data-filter="likely" onclick="setFilter('likely')">Likely eligible</div>
+      <div class="filter-chip" data-filter="possible" onclick="setFilter('possible')">Possibly eligible</div>
+      <div class="filter-chip" data-filter="unlikely" onclick="setFilter('unlikely')">Unlikely eligible</div>
+    </div>
+
+    <div id="results-list"></div>
+  </section>
+
+</div>
+
+<footer>
+  Setu — Government Scheme Eligibility Assistant · Local, offline reference tool · Provides an indicative estimate only, not an official government determination. Verify final eligibility with the relevant department before applying.
+</footer>
+
+<script>
+// ---------------- Local scheme database (mirrors schemes_data.py) ----------------
+const SCHEMES = [
+  {name:"PM-KISAN (Pradhan Mantri Kisan Samman Nidhi)", category:"Agriculture",
+   description:"Income support of ₹6,000/year to small and marginal farmer families, paid in 3 installments.",
+   criteria:{occupation:["farmer"], land_owner:[true]},
+   documents:"Aadhaar Card, Land ownership papers (RoR), Bank passbook linked to Aadhaar, Photograph",
+   benefit:"₹6,000/year in 3 equal installments, direct to bank account",
+   apply:"Online via pmkisan.gov.in or nearest Common Service Centre"},
+
+  {name:"Ayushman Bharat – PM Jan Arogya Yojana (PM-JAY)", category:"Health",
+   description:"Health insurance cover of ₹5 lakh per family per year for hospitalization.",
+   criteria:{max_income:250000},
+   documents:"Aadhaar Card, Ration/BPL Card, Income Certificate, Family ID (SECC, if applicable)",
+   benefit:"Cashless health cover up to ₹5,00,000 per family per year",
+   apply:"Common Service Centre, empanelled hospital, or setu.pmjay.gov.in"},
+
+  {name:"Pradhan Mantri Awas Yojana (PMAY)", category:"Housing",
+   description:"Financial assistance for construction or purchase of a house for economically weaker sections.",
+   criteria:{max_income:300000, owns_pucca_house:[false]},
+   documents:"Aadhaar Card, Income Certificate, No-pucca-house declaration, Bank details, Photograph",
+   benefit:"Subsidy up to ₹2.67 lakh on home loan interest / direct construction assistance",
+   apply:"Online via pmaymis.gov.in or local municipal office"},
+
+  {name:"National Scholarship Portal – Post-Matric Scholarship", category:"Education",
+   description:"Financial assistance to SC/ST/OBC/minority/EWS students studying post-matriculation.",
+   criteria:{is_student:[true], max_income:250000, min_age:13, max_age:35},
+   documents:"Aadhaar Card, Caste Certificate (if applicable), Income Certificate, Mark sheet, Bonafide certificate, Bank passbook",
+   benefit:"Tuition reimbursement + maintenance allowance (varies by state/category)",
+   apply:"Online via scholarships.gov.in"},
+
+  {name:"Pradhan Mantri Ujjwala Yojana (PMUY)", category:"Household",
+   description:"Free LPG gas connection to women from Below Poverty Line households.",
+   criteria:{gender:["female"], bpl_card:[true], min_age:18},
+   documents:"Aadhaar Card, BPL Ration Card, Bank passbook, Photograph, Address proof",
+   benefit:"Free LPG connection with first refill and stove, subsidy on refills",
+   apply:"Nearest LPG distributor or pmuy.gov.in"},
+
+  {name:"Atal Pension Yojana (APY)", category:"Pension",
+   description:"Guaranteed minimum pension scheme for workers in the unorganized sector.",
+   criteria:{min_age:18, max_age:40, has_bank_account:[true]},
+   documents:"Aadhaar Card, Bank passbook, Mobile number linked to bank account",
+   benefit:"Guaranteed monthly pension of ₹1,000–₹5,000 after age 60",
+   apply:"Any bank branch or post office offering APY"},
+
+  {name:"Pradhan Mantri Mudra Yojana (PMMY)", category:"Employment / Business",
+   description:"Collateral-free loans up to ₹10 lakh for non-corporate, non-farm micro enterprises.",
+   criteria:{occupation:["self-employed","business_owner","unemployed"], min_age:18},
+   documents:"Aadhaar Card, PAN Card, Business plan / proof of business, Bank statement, Photograph",
+   benefit:"Loans up to ₹50,000 (Shishu) / ₹5 lakh (Kishor) / ₹10 lakh (Tarun)",
+   apply:"Any nationalized bank, RRB, or mudra.org.in"},
+
+  {name:"National Old Age Pension Scheme (IGNOAPS)", category:"Pension",
+   description:"Monthly pension for elderly citizens living below the poverty line.",
+   criteria:{min_age:60, bpl_card:[true]},
+   documents:"Aadhaar Card, Age proof, BPL Certificate, Bank/Post office account details",
+   benefit:"Monthly pension, amount varies by state (typically ₹200–1000+)",
+   apply:"District Social Welfare Office or state e-Governance portal"},
+
+  {name:"Pradhan Mantri Matru Vandana Yojana (PMMVY)", category:"Maternity / Women",
+   description:"Cash incentive for pregnant and lactating mothers for their first live birth.",
+   criteria:{gender:["female"], is_pregnant:[true], min_age:19},
+   documents:"Aadhaar Card, MCP Card, Bank passbook, Husband's Aadhaar (if available)",
+   benefit:"₹5,000 in three installments for the first living child",
+   apply:"Anganwadi Centre or nearest health facility"},
+
+  {name:"Sukanya Samriddhi Yojana (SSY)", category:"Savings / Girl Child",
+   description:"Small savings scheme for the girl child, offering high interest and tax benefits.",
+   criteria:{gender:["female"], max_age:10},
+   documents:"Birth Certificate of girl child, Guardian's Aadhaar, Address proof, Photograph",
+   benefit:"High-interest account maturing at age 21; tax benefits under 80C",
+   apply:"Any post office or authorized bank branch"},
+
+  {name:"PM Street Vendor's AtmaNirbhar Nidhi (PM SVANidhi)", category:"Employment / Business",
+   description:"Collateral-free working capital loan for street vendors.",
+   criteria:{occupation:["street_vendor"], min_age:18},
+   documents:"Aadhaar Card, Vending Certificate / ULB recommendation letter, Bank details",
+   benefit:"Working capital loan up to ₹10,000, increasing with repayment",
+   apply:"Online via pmsvanidhi.mohua.gov.in or nearest Urban Local Body"},
+
+  {name:"Deen Dayal Upadhyaya Grameen Kaushalya Yojana (DDU-GKY)", category:"Skill Development",
+   description:"Free skill training and placement assistance for rural youth.",
+   criteria:{min_age:15, max_age:35, location:["rural"]},
+   documents:"Aadhaar Card, Educational certificates, Domicile certificate, Bank passbook",
+   benefit:"Free skill training (residential/non-residential) + guaranteed placement assistance",
+   apply:"Nearest DDU-GKY training center or ddugky.gov.in"},
+];
+
+// ---------------- Eligibility engine (mirrors eligibility_engine.py) ----------------
+function checkEligibility(user){
+  return SCHEMES.map(scheme => {
+    const crit = scheme.criteria;
+    let total = 0, passed = 0;
+    const reasons = [];
+
+    function check(cond, label){
+      total++;
+      if(cond) passed++; else reasons.push(label);
+    }
+
+    if(crit.min_age !== undefined) check(user.age >= crit.min_age, `Minimum age required: ${crit.min_age}`);
+    if(crit.max_age !== undefined) check(user.age <= crit.max_age, `Maximum age limit: ${crit.max_age}`);
+    if(crit.max_income !== undefined) check(user.income <= crit.max_income, `Annual income should not exceed ₹${crit.max_income.toLocaleString('en-IN')}`);
+    if(crit.occupation) check(crit.occupation.includes(user.occupation), `Occupation should be one of: ${crit.occupation.join(", ")}`);
+    if(crit.gender) check(crit.gender.includes(user.gender), `Scheme applicable for: ${crit.gender.join(", ")}`);
+    if(crit.location) check(crit.location.includes(user.location), `Applicable in: ${crit.location.join(", ")} areas`);
+    ["land_owner","bpl_card","owns_pucca_house","is_student","is_pregnant","has_bank_account"].forEach(flag=>{
+      if(crit[flag] !== undefined) check(crit[flag].includes(user[flag]), `Condition on '${flag.replace(/_/g," ")}' not met`);
+    });
+
+    const pct = total ? Math.round((passed/total)*1000)/10 : 100;
+    let status = "unlikely";
+    if(pct >= 80) status = "likely";
+    else if(pct >= 50) status = "possible";
+
+    return {scheme, status, pct, reasons};
+  }).sort((a,b)=>b.pct - a.pct);
+}
+
+// ---------------- UI wiring ----------------
+let currentResults = [];
+let currentFilterVal = "all";
+
+function clearForm(){
+  document.getElementById('age').value='';
+  document.getElementById('income').value='';
+  document.getElementById('gender').value='female';
+  document.getElementById('occupation').value='farmer';
+  document.getElementById('location').value='rural';
+  document.getElementById('bank').value='yes';
+  ['land_owner','bpl_card','owns_pucca_house','is_student','is_pregnant'].forEach(id=>{
+    document.getElementById(id).checked=false;
+  });
+}
+
+function runCheck(){
+  const age = parseInt(document.getElementById('age').value);
+  const income = parseFloat(document.getElementById('income').value);
+
+  if(isNaN(age) || age<=0 || age>120){ alert("Please enter a realistic age."); return; }
+  if(isNaN(income) || income<0){ alert("Please enter a valid annual income."); return; }
+
+  const user = {
+    age, income,
+    gender: document.getElementById('gender').value,
+    occupation: document.getElementById('occupation').value,
+    location: document.getElementById('location').value,
+    has_bank_account: document.getElementById('bank').value === 'yes',
+    land_owner: document.getElementById('land_owner').checked,
+    bpl_card: document.getElementById('bpl_card').checked,
+    owns_pucca_house: document.getElementById('owns_pucca_house').checked,
+    is_student: document.getElementById('is_student').checked,
+    is_pregnant: document.getElementById('is_pregnant').checked,
+  };
+
+  currentResults = checkEligibility(user);
+  renderResults();
+  document.getElementById('results-section').style.display = 'block';
+  document.getElementById('results-section').scrollIntoView({behavior:'smooth'});
+}
+
+function setFilter(f){
+  currentFilterVal = f;
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.toggle('active', c.dataset.filter===f));
+  renderResults();
+}
+
+function renderResults(){
+  const likely = currentResults.filter(r=>r.status==='likely').length;
+  const possible = currentResults.filter(r=>r.status==='possible').length;
+  document.getElementById('count-likely').textContent = likely;
+  document.getElementById('count-possible').textContent = possible;
+  document.getElementById('count-total').textContent = currentResults.length;
+
+  const list = document.getElementById('results-list');
+  list.innerHTML = '';
+
+  const shown = currentFilterVal==='all' ? currentResults : currentResults.filter(r=>r.status===currentFilterVal);
+
+  if(shown.length===0){
+    list.innerHTML = '<div class="empty-state">No schemes match this filter.</div>';
+    return;
+  }
+
+  shown.forEach(r=>{
+    const s = r.scheme;
+    const statusLabel = {likely:"Likely eligible", possible:"Possibly eligible", unlikely:"Unlikely eligible"}[r.status];
+    const card = document.createElement('div');
+    card.className = 'result-card';
+    card.innerHTML = `
+      <div class="result-top">
+        <h3 class="result-title">${s.name}</h3>
+        <span class="badge ${r.status}">${statusLabel} · ${r.pct}%</span>
+      </div>
+      <div class="result-category">${s.category}</div>
+      <p class="result-desc">${s.description}</p>
+      <div class="result-meta">
+        <div class="meta-block"><div class="k">Benefit</div><div class="v">${s.benefit}</div></div>
+        <div class="meta-block"><div class="k">How to apply</div><div class="v">${s.apply}</div></div>
+        <div class="meta-block" style="grid-column:1/-1;"><div class="k">Documents required</div><div class="v">${s.documents}</div></div>
+      </div>
+      ${r.reasons.length ? `<div class="gap-note"><b>Gaps to address</b>${r.reasons.join(" · ")}</div>` : ''}
+    `;
+    list.appendChild(card);
+  });
+}
+</script>
+</body>
+</html>

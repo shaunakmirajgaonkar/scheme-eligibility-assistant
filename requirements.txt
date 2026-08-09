@@ -1,0 +1,6 @@
+# No external dependencies required.
+# This app uses only Python's standard library:
+# tkinter, json, os, datetime
+# Tkinter ships with standard Python installers on Windows/macOS.
+# On Linux, install it via your package manager if missing, e.g.:
+#   sudo apt-get install python3-tk
